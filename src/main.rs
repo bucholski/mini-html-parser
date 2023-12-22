@@ -7,7 +7,8 @@ fn main() {
     let mut html_string: String =
         "<table attribute attribute2=1 attribute3=\"hioh\" attribute4='hioh' attribute5><tbody><tr a1=2 a2 a3><td arg><input hio=pstro barachlo /></td><td>##TEXT##</td></tr><tr><td>hiopop</td><td groho paproho=sio>heh</td></tr></tbody></table>".into();
     let a = HTMLNode::from(&mut html_string);
-    dbg!(&a);
+    let b = a.to_html();
+    dbg!(&b);
 }
 
 #[derive(Debug)]
@@ -22,6 +23,37 @@ struct HTMLNode {
 struct HTMLAttribute {
     name: String,
     value: Option<String>,
+}
+
+impl HTMLAttribute {
+  fn as_str(&self) -> String {
+    match &self.value {
+      Some(value) => format!("{}={}",self.name,value),
+      None => self.name.clone(),
+    }
+  }
+}
+
+impl HTMLNode {
+  fn to_html(&self) -> String {
+    let attributes = match &self.attributes {
+      Some(attributes) => attributes.iter().map(|attribute|attribute.as_str()).collect::<String>(),
+      None => "".to_string()
+    };
+    let text_content = match &self.text_content {
+      Some(text) => text,
+      None => "",
+    };
+    let children = match &self.children {
+      None =>  "".to_string(),
+      Some(children) => {
+        children.iter().map(|node|node.to_html()).collect()
+      }
+    };
+    let close_tag = format!("</{}>",self.name);
+    format!("<{} {}>{}{}</{}>",self.name, attributes, text_content, children, self.name)
+    // let mut child = format!("<"); 
+  }
 }
 
 impl From<&mut String> for HTMLNode {
