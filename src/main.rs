@@ -7,7 +7,7 @@ use std::collections::binary_heap::Drain;
 fn main() {
     let mut html_string: String =
         "<table attribute attribute2=1 attribute3=\"hioh\" attribute4='hioh' attribute5><tbody><tr a1=2 a2 a3><td arg><input hio=pstro barachlo /></td><td>##TEXT##</td></tr><tr><td>hiopop</td><td groho paproho=sio>heh</td></tr></tbody></table>".into();
-    let a = parse_node_with_descendands(&mut html_string);
+    let a = HTMLNode::from(&mut html_string);
     dbg!(&a);
 }
 
@@ -25,9 +25,10 @@ struct HTMLAttribute {
     value: Option<String>,
 }
 
-fn parse_node_with_descendands(html_string: &mut String) -> HTMLNode {
+impl From<&mut String> for HTMLNode {
+  fn from(html_string: &mut String) -> Self {
     let mut children : Vec<HTMLNode> = Vec::new();
-    let self_closing = handle_selfclosing_tag(html_string);
+    let self_closing = get_selfclosing_tag(html_string);
     if self_closing.is_some(){
       return self_closing.unwrap()
     }
@@ -38,7 +39,7 @@ fn parse_node_with_descendands(html_string: &mut String) -> HTMLNode {
 
     let closing_tag = format!("</{}>",name);
     while  (!html_string.starts_with(&closing_tag) && !html_string.is_empty()) {
-      children.push(parse_node_with_descendands(html_string));
+      children.push(HTMLNode::from(&mut html_string.clone()));
     }
     html_string.drain(0..closing_tag.len());
 
@@ -51,16 +52,15 @@ fn parse_node_with_descendands(html_string: &mut String) -> HTMLNode {
         false=> Some(children)
       }
     }
-    
-
+  }
 }
+
 
 fn get_next_tag(html_string: &mut String) -> String {
     let start_of_tag = html_string.find("<");
     let end_of_tag = html_string.find(|char| char == '>' || char == ' ');
     let indices = match (start_of_tag, end_of_tag) {
         (Some(start), Some(end)) => (start, end + 1),
-        //+1 to include the closing tag or space
         _ => todo!(),
     };
     let mut tag = html_string
@@ -68,7 +68,7 @@ fn get_next_tag(html_string: &mut String) -> String {
         .as_str()
         .trim_start_matches('<')
         .trim_end_matches('>')
-        .trim_end() //if attribute 
+        .trim_end() //if attribute follows
         .to_string();
     tag
 }
@@ -81,7 +81,6 @@ fn get_attributes(html_string: &mut String) -> Option<Vec<HTMLAttribute>> {
         return None;
       }
     }
-
     if html_string.starts_with('<') || html_string.is_empty() {
         return None;
     }
@@ -114,7 +113,6 @@ fn get_attributes(html_string: &mut String) -> Option<Vec<HTMLAttribute>> {
 fn get_text_content(html_string: &mut String) -> Option<String> {
     //TODO!!!
     //What if text starts with a '<' character? Consider workaround
-    
     if html_string.starts_with('<') || html_string.is_empty() {
       return None;
     }
@@ -123,9 +121,8 @@ fn get_text_content(html_string: &mut String) -> Option<String> {
     let text_content = html_string.drain(0..end_index).as_str().to_string();
     Some(text_content)
   }
-
   
-  fn handle_selfclosing_tag (html_string: &mut String) -> Option<HTMLNode>{
+  fn get_selfclosing_tag (html_string: &mut String) -> Option<HTMLNode>{
     if html_string.is_empty() {
       return None;
     }
