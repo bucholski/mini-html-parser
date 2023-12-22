@@ -3,7 +3,6 @@
 
 #![allow(dead_code, unused)]
 
-use std::collections::binary_heap::Drain;
 fn main() {
     let mut html_string: String =
         "<table attribute attribute2=1 attribute3=\"hioh\" attribute4='hioh' attribute5><tbody><tr a1=2 a2 a3><td arg><input hio=pstro barachlo /></td><td>##TEXT##</td></tr><tr><td>hiopop</td><td groho paproho=sio>heh</td></tr></tbody></table>".into();
@@ -61,7 +60,7 @@ fn get_next_tag(html_string: &mut String) -> String {
     let end_of_tag = html_string.find(|char| char == '>' || char == ' ');
     let indices = match (start_of_tag, end_of_tag) {
         (Some(start), Some(end)) => (start, end + 1),
-        _ => todo!(),
+        _ => panic!("get_next_tag didn't get both indices correctly, empty string probably"), //this shouldn't happen realistically, but still...
     };
     let mut tag = html_string
         .drain(indices.0..indices.1)
