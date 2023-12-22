@@ -7,8 +7,8 @@ fn main() {
     let mut html_string: String =
         "<table attribute attribute2=1 attribute3=\"hioh\" attribute4='hioh' attribute5><tbody><tr a1=2 a2 a3><td arg><input hio=pstro barachlo /></td><td>##TEXT##</td></tr><tr><td>hiopop</td><td groho paproho=sio>heh</td></tr></tbody></table>".into();
     let a = HTMLNode::from(&mut html_string);
-    let b = a.to_html();
-    dbg!(&b);
+    // let b = a.to_html();
+    dbg!(&a);
 }
 
 #[derive(Debug)]
@@ -47,7 +47,8 @@ impl HTMLNode {
     let children = match &self.children {
       None =>  "".to_string(),
       Some(children) => {
-        children.iter().map(|node|node.to_html()).collect()
+        // children.iter().map(|node|node.to_html()).collect()
+        "".to_string()
       }
     };
     let close_tag = format!("</{}>",self.name);
