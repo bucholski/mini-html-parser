@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::fmt::Error;
+
 use crate::structs::*;
 const START_TOKEN: char = '<';
 const END_TOKEN: char = '>';
@@ -21,34 +23,55 @@ const VOID_TAGS: [&str; 13] = [
     "wbr",
 ];
 
-fn deserialize(html_string: &str) -> Node {
-    loop {
-        let next_tag = get_next_tag(html_string);
-        if let None = next_tag {
-            break todo!();
-        }
-        let residual = next_tag.unwrap();
-        let (tag_name, residual) = get_tag_name(residual);
-        todo!();
+pub fn deserialize_dom(html_string: &str) -> Node {
+    let mut residual = html_string;
+    if check_next_tag(&mut residual).is_none() {
+        todo!("Return the tree of nodes");
     }
-}
-fn get_next_tag(residual: &str) -> Option<&str> {
-    residual.strip_prefix(START_TOKEN)
+    let tag_name = get_tag_name(&mut residual);
+    let self_closing = is_void(&tag_name);
+    let attributes = get_attributes_array(&mut residual);
+    close_tag(&mut residual);
+
+    todo!();
 }
 
-fn get_tag_name(residual: &str) -> (&str, &str) {
-    let trimmed = residual.trim_start();
-    let tag_name = &residual[0..residual.find(|c| (c == SPACE || c == CLOSE_TOKEN)).unwrap()];
-    todo!("return (tag_name, unparsed_string")
+fn check_next_tag(residual: &mut &str) -> Option<()> {
+    *residual = residual.strip_prefix(START_TOKEN).unwrap();
+    Some(())
 }
-fn is_self_closing(tag_name: &str) -> bool {
+
+fn get_tag_name<'a>(residual: &mut &'a str) -> &'a str {
+    *residual = residual.trim_start();
+    let tag_name = &residual[0..residual.find(|c| (c == SPACE || c == CLOSE_TOKEN)).unwrap()];
+    *residual = residual.strip_prefix(tag_name).unwrap();
+    tag_name
+}
+fn is_void(tag_name: &str) -> bool {
     VOID_TAGS.contains(&tag_name)
 }
-fn get_attributes(residual: &str) -> (Option<Vec<Attribute>>, &str) {
+fn get_attributes_array<'a>(residual: &mut &str) -> Option<Vec<Attribute>> {
+    let mut attributes_arr: Vec<Attribute> = vec![];
+    loop {
+        let next_atribute = get_next_attribute(residual);
+        if next_atribute.is_none() {
+            break;
+        }
+        // attributes_arr.push(next_atribute);
+    }
+    match attributes_arr.len() {
+        0 => None,
+        _ => Some(attributes_arr),
+    }
+}
+
+fn get_next_attribute(residual: &mut &str) -> Option<Attribute> {
     todo!()
 }
-fn get_tag_end(residual: &str) -> usize {
-    todo!()
+fn close_tag(residual: &mut &str) {
+    let prefix =
+        &residual[..residual.find(CLOSE_TOKEN).expect("All tags need to close eventually")];
+    *residual = residual.strip_prefix(prefix).expect("All tags need to close eventually");
 }
 
 fn get_text_content(residual: &str) -> usize {
