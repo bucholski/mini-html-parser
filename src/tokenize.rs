@@ -7,6 +7,8 @@ const END_TOKEN: char = '>';
 const CLOSE_TOKEN: char = '/';
 const ATT_VALUE_TOKEN: char = '=';
 const SPACE: char = ' ';
+const SINGLE_QUOTE: char = '\'';
+const DOUBLE_QUOTE: char = '"';
 const VOID_TAGS: [&str; 13] = [
     "area",
     "base",
@@ -23,10 +25,10 @@ const VOID_TAGS: [&str; 13] = [
     "wbr",
 ];
 
-pub fn deserialize_dom(html_string: &str) -> Node {
+pub fn deserialize_node(html_string: &str) -> Node {
     let mut residual = html_string;
     if check_next_tag(&mut residual).is_none() {
-        todo!("Return the tree of nodes");
+        todo!("Return the node");
     }
     let tag_name = get_tag_name(&mut residual);
     let self_closing = is_void(&tag_name);
@@ -37,7 +39,7 @@ pub fn deserialize_dom(html_string: &str) -> Node {
 }
 
 fn check_next_tag(residual: &mut &str) -> Option<()> {
-    if residual.is_empty() {
+    if residual.strip_prefix(START_TOKEN).is_none() {
         return None;
     }
     *residual = residual.strip_prefix(START_TOKEN).unwrap();
@@ -46,7 +48,10 @@ fn check_next_tag(residual: &mut &str) -> Option<()> {
 
 fn get_tag_name<'a>(residual: &mut &'a str) -> &'a str {
     *residual = residual.trim_start();
-    let tag_name = &residual[0..residual.find(|c| (c == SPACE || c == CLOSE_TOKEN)).unwrap()];
+    dbg!(&residual);
+
+    let tag_name = &residual[0..residual.find(|c| (c == SPACE || c == END_TOKEN)).unwrap()];
+    dbg!(&tag_name);
     *residual = residual.strip_prefix(tag_name).unwrap();
     tag_name
 }
@@ -95,13 +100,35 @@ mod test {
     #[test]
     fn test_next_tag() {
         let mut empty = "";
-        let mut whitespace = "";
-        let mut gibberish = "";
+        let mut whitespace = "    \n\r\t";
+        let mut gibberish = "fewkjfoiewjfopw";
         let mut html = "<div></div>";
+        let original_html = "<div></div>";
+
         assert_eq!(None, check_next_tag(&mut empty));
         assert_eq!(None, check_next_tag(&mut whitespace));
         assert_eq!(None, check_next_tag(&mut gibberish));
-
         assert_eq!(Some(()), check_next_tag(&mut html));
+        assert_eq!(html, original_html.strip_prefix(START_TOKEN).unwrap());
+    }
+    #[test]
+    fn test_is_void() {
+        let name_1 = "div";
+        let name_2 = "input";
+        let name_3 = "col";
+        let name_4 = "djqnoih3ionfo32nw";
+        assert_eq!(is_void(name_1), false);
+        assert_eq!(is_void(name_2), true);
+        assert_eq!(is_void(name_3), true);
+        assert_eq!(is_void(name_4), false);
+    }
+
+    #[test]
+    fn test_get_tag_name() {
+        let mut html = "<div></div>";
+        check_next_tag(&mut html);
+        assert_eq!("div></div>", html);
+        assert_eq!("div", get_tag_name(&mut html));
+        assert_eq!("></div>", html);
     }
 }
