@@ -37,6 +37,9 @@ pub fn deserialize_dom(html_string: &str) -> Node {
 }
 
 fn check_next_tag(residual: &mut &str) -> Option<()> {
+    if residual.is_empty() {
+        return None;
+    }
     *residual = residual.strip_prefix(START_TOKEN).unwrap();
     Some(())
 }
@@ -74,6 +77,7 @@ fn close_tag(residual: &mut &str) {
     *residual = residual.strip_prefix(prefix).expect("All tags need to close eventually");
 }
 
+//should it even be here
 fn get_text_content(residual: &str) -> usize {
     todo!()
 }
@@ -88,7 +92,16 @@ fn get_text_content(residual: &str) -> usize {
 #[cfg(test)]
 mod test {
     use super::*;
-    const TEST_HTML: &str = "<div></div>";
     #[test]
-    fn tokenize() {}
+    fn test_next_tag() {
+        let mut empty = "";
+        let mut whitespace = "";
+        let mut gibberish = "";
+        let mut html = "<div></div>";
+        assert_eq!(None, check_next_tag(&mut empty));
+        assert_eq!(None, check_next_tag(&mut whitespace));
+        assert_eq!(None, check_next_tag(&mut gibberish));
+
+        assert_eq!(Some(()), check_next_tag(&mut html));
+    }
 }
